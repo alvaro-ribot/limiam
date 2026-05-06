@@ -15,7 +15,7 @@ algorithmic skeleton.
 If you use this code, please cite the paper:
 
 ```bibtex
-@article{PLACEHOLDER_LiMIAM,
+@article{LiMIAM,
   title   = {Causal discovery under mean independence and linearity},
   author = {Geert Mesters and Alvaro Ribot and Anna Seigal and Piotr Zwiernik},
   year={2025}
