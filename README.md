@@ -16,10 +16,9 @@ If you use this code, please cite the paper:
 
 ```bibtex
 @article{PLACEHOLDER_LiMIAM,
-  title   = {PLACEHOLDER: Direct Causal Discovery Under Mean Independence},
-  author  = {PLACEHOLDER},
-  journal = {PLACEHOLDER},
-  year    = {PLACEHOLDER},
+  title   = {Causal discovery under mean independence and linearity},
+  author = {Geert Mesters and Alvaro Ribot and Anna Seigal and Piotr Zwiernik},
+  year={2025}
 }
 ```
 
