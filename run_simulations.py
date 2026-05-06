@@ -1,8 +1,7 @@
-"""Replicate the synthetic experiments for Figures 3 and 4.
+"""Run synthetic experiments for Figures 3 and 4.
 
-Default settings match the paper/MATLAB replication: 100 Monte Carlo
-replications, T=500, p in {2,3,4,5,6}, four shock distributions, and four
-dependence designs.
+Default settings: 100 Monte Carlo replications, T=500, p in {2,3,4,5,6},
+four shock distributions, and four dependence designs.
 """
 
 from __future__ import annotations
@@ -436,11 +435,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--edge-tol", type=float, default=1e-11)
     parser.add_argument(
         "--adjacency-estimator",
-        choices=["adaptive_lasso", "full_ols"],
-        default="full_ols",
+        choices=["adaptive_lasso", "ols"],
+        default="ols",
         help=(
-            "Final B estimator. full_ols matches the collaborator MATLAB "
-            "Replication code; adaptive_lasso matches the LiNGAM Python code path."
+            "Estimate B using OLS on all predecessors in the learned order, "
+            "or the adaptive-Lasso parent-selection plus OLS-refit approach."
         ),
     )
     parser.add_argument(

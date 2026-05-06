@@ -81,7 +81,7 @@ The default estimator is:
 ```python
 DirectLiMIAM(
     score="kernel_cv",
-    adjacency_estimator="full_ols",
+    adjacency_estimator="ols",
     cv_folds=5,
 )
 ```
@@ -98,7 +98,7 @@ The `score` argument controls how candidate source variables are selected:
 Example:
 
 ```python
-model = DirectLiMIAM(score="sieve_cv", adjacency_estimator="full_ols").fit(X)
+model = DirectLiMIAM(score="sieve_cv", adjacency_estimator="ols").fit(X)
 ```
 
 ## Estimating the Adjacency Matrix
@@ -109,13 +109,13 @@ two choices for estimating the weighted adjacency matrix `B`.
 ### 1. Full OLS, the default
 
 ```python
-model = DirectLiMIAM(adjacency_estimator="full_ols").fit(X)
+model = DirectLiMIAM(adjacency_estimator="ols").fit(X)
 ```
 
 For each target variable, this regresses the target on all variables that appear
 earlier in the estimated causal order.
 
-Use `full_ols` when:
+Use `ols` when:
 
 - you want the paper's default behavior;
 - the number of variables is small or moderate;
@@ -142,7 +142,7 @@ Use `adaptive_lasso` when:
 - you prefer automatic parent pruning after the order has been estimated.
 
 Adaptive LASSO may drop weak but scientifically meaningful effects. For the
-paper results, use the default `full_ols`.
+paper results, use the default `ols`.
 
 ## Reproducing the Paper Figures
 
@@ -227,7 +227,7 @@ Common options:
 
 - `--jobs 16`: run simulation tasks in parallel.
 - `--mc 100`: number of Monte Carlo replications per simulation cell.
-- `--adjacency-estimator full_ols`: default adjacency estimator.
+- `--adjacency-estimator ols`: default adjacency estimator.
 - `--adjacency-estimator adaptive_lasso`: sparse sensitivity analysis.
 - `--plot-only-summary PATH`: rebuild plots from an existing summary CSV.
 
@@ -262,7 +262,7 @@ also written for readability.
 
 ## Notes For Practitioners
 
-1. Start with `score="kernel_cv"` and `adjacency_estimator="full_ols"`.
+1. Start with `score="kernel_cv"` and `adjacency_estimator="ols"`.
 2. Standardize your data first if you want edge magnitudes to be comparable
    across variables.
 3. Use `adaptive_lasso` as a robustness check when you want a sparse graph.

@@ -9,9 +9,9 @@ Array = np.ndarray
 
 
 def structural_hamming_distance(b_hat: Array, truth_support: Array, edge_tol: float = 1e-11) -> int:
-    """Pairwise SHD used in the MATLAB replication.
+    """Pairwise structural Hamming distance between estimated and true DAGs.
 
-    For each unordered node pair this counts one error if the estimated
+    For each unordered node pair, counts one error if the estimated
     directed edge state differs from the true directed edge state.
     """
 

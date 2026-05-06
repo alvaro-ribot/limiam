@@ -52,7 +52,7 @@ def generate_sparse_lower_triangular_b(
     coef_min: float = 0.30,
     coef_max: float = 0.80,
 ) -> Array:
-    """Generate the MATLAB replication's lower triangular B matrix."""
+    """Generate a sparse lower triangular B matrix for a linear SEM."""
 
     b = np.zeros((n_nodes, n_nodes), dtype=float)
     for target in range(1, n_nodes):

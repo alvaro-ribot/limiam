@@ -1,4 +1,4 @@
-"""Self-contained DirectLiMIAM estimator and DirectLiNGAM-style score.
+"""DirectLiMIAM estimator and DirectLiNGAM-style score.
 
 The orientation convention throughout this folder is
 
@@ -68,8 +68,7 @@ def standardize_columns(x: Array) -> Array:
 def residual(y: Array, x: Array) -> Array:
     """Residual from regressing y on x with no explicit intercept.
 
-    Inputs are centered in the covariance formula, matching the MATLAB
-    replication code and the reference DirectLiNGAM implementation.
+    Inputs are centered in the covariance formula.
     """
 
     y = np.asarray(y, dtype=float).reshape(-1)
@@ -84,13 +83,9 @@ def residual(y: Array, x: Array) -> Array:
 def predict_adaptive_lasso(x: Array, predictors: Iterable[int], target: int, gamma: float = 1.0) -> Array:
     """Adaptive-Lasso parent selection followed by OLS refit.
 
-    This is a self-contained port of the LiNGAM project's
-    ``utils.predict_adaptive_lasso`` routine used by
-    ``_BaseLiNGAM._estimate_adjacency_matrix`` in this repository's
-    ``base.py``. It standardizes ``X``, builds adaptive weights from an
-    initial OLS fit, selects parents with ``LassoLarsIC(criterion="bic")``,
-    and finally refits ordinary least squares on the selected parents in the
-    original scale.
+    Standardizes X, builds adaptive weights from an initial OLS fit,
+    selects parents with LassoLarsIC(criterion="bic"), and refits
+    ordinary least squares on selected parents in the original scale.
     """
 
     x = _as_array(x)
@@ -118,13 +113,8 @@ def predict_adaptive_lasso(x: Array, predictors: Iterable[int], target: int, gam
     return coef
 
 
-def estimate_adjacency_full_ols_given_order(x: Array, order: Iterable[int]) -> Array:
-    """Estimate B by OLS on all predecessors in ``order``.
-
-    This matches the MATLAB replication code's final adjacency-estimation
-    step. Adaptive-Lasso parent pruning is still available separately through
-    ``estimate_adjacency_given_order``.
-    """
+def estimate_adjacency_ols_given_order(x: Array, order: Iterable[int]) -> Array:
+    """Estimate B by OLS on all predecessors in ``order``."""
 
     x = center_columns(_as_array(x))
     order = list(order)
@@ -163,21 +153,21 @@ def estimate_adjacency_given_order(x: Array, order: Iterable[int], gamma: float 
 def fit_order_and_adjacency(
     x: Array,
     order: Iterable[int],
-    adjacency_estimator: str = "full_ols",
+    adjacency_estimator: str = "ols",
 ) -> FitResult:
     order = list(order)
     estimator = str(adjacency_estimator).lower()
-    if estimator in {"full_ols", "ols", "replication_ols"}:
-        adjacency = estimate_adjacency_full_ols_given_order(x, order)
-    elif estimator in {"adaptive_lasso", "lasso", "lingam"}:
+    if estimator == "ols":
+        adjacency = estimate_adjacency_ols_given_order(x, order)
+    elif estimator == "adaptive_lasso":
         adjacency = estimate_adjacency_given_order(x, order)
     else:
-        raise ValueError(f"Unknown adjacency_estimator: {adjacency_estimator}")
+        raise ValueError(f"Unknown adjacency_estimator: {adjacency_estimator}. Choose 'ols' or 'adaptive_lasso'.")
     return FitResult(order, adjacency, [], [])
 
 
 def make_folds(n_samples: int, n_folds: int) -> Array:
-    """Deterministic fold assignment used by the MATLAB replication."""
+    """Deterministic fold assignment for cross-validation."""
 
     n_folds = int(max(2, min(n_folds, n_samples)))
     fold_id = np.arange(n_samples) % n_folds
@@ -326,18 +316,15 @@ class DirectLiMIAM:
     ----------
     score:
         ``"moment"``, ``"sieve_cv"``, ``"kernel_cv"``, or ``"pwling"``.
-        The first three are DirectLiMIAM mean-independence scores. The
-        ``"pwling"`` score is the DirectLiNGAM pairwise-likelihood/entropy
-        independence score, included as a score backend because it uses the
-        same recursive source-removal skeleton. The CV variants implement the
-        predictive-improvement scores from the MATLAB replication: choose one
-        smoothing parameter per candidate by pooled K-fold CV, then score by
-        out-of-fold improvement over a constant predictor. Smaller scores are
-        more exogenous.
+        The first three compute mean-independence scores. ``"pwling"`` uses
+        the DirectLiNGAM pairwise-likelihood/entropy approach. The CV variants
+        choose a smoothing parameter per candidate via K-fold CV, then score by
+        out-of-fold improvement over a constant predictor. Smaller scores
+        indicate more exogenous variables.
     adjacency_estimator:
-        ``"full_ols"`` by default, matching the MATLAB replication's final
-        B-estimation step. Use ``"adaptive_lasso"`` for the LiNGAM Python
-        adaptive-Lasso parent-selection plus OLS-refit path.
+        ``"ols"`` (default) for OLS estimation on all predecessors in the
+        learned order, or ``"adaptive_lasso"`` for the adaptive-Lasso
+        parent-selection plus OLS-refit approach.
     """
 
     def __init__(
@@ -349,7 +336,7 @@ class DirectLiMIAM:
         cv_folds: int = 5,
         spline_degree: int = 3,
         ridge: float = 1e-6,
-        adjacency_estimator: str = "full_ols",
+        adjacency_estimator: str = "ols",
     ):
         self.score = score
         self.moment_powers = tuple(moment_powers)
@@ -388,12 +375,13 @@ class DirectLiMIAM:
 
         order.append(active[0])
         self.causal_order_ = order
-        if str(self.adjacency_estimator).lower() in {"full_ols", "ols", "replication_ols"}:
-            self.adjacency_matrix_ = estimate_adjacency_full_ols_given_order(x_centered, order)
-        elif str(self.adjacency_estimator).lower() in {"adaptive_lasso", "lasso", "lingam"}:
+        estimator = str(self.adjacency_estimator).lower()
+        if estimator == "ols":
+            self.adjacency_matrix_ = estimate_adjacency_ols_given_order(x_centered, order)
+        elif estimator == "adaptive_lasso":
             self.adjacency_matrix_ = estimate_adjacency_given_order(x_centered, order)
         else:
-            raise ValueError(f"Unknown adjacency_estimator: {self.adjacency_estimator}")
+            raise ValueError(f"Unknown adjacency_estimator: {self.adjacency_estimator}. Choose 'ols' or 'adaptive_lasso'.")
         self.scores_ = scores
         self.selected_params_ = params
         return self
@@ -410,15 +398,15 @@ class DirectLiMIAM:
 
     def _candidate_scores(self, x_work: Array) -> tuple[Array, list[float | int | None]]:
         score_name = self.score.lower()
-        if score_name in {"moment", "moments", "mi-moment"}:
+        if score_name == "moment":
             return self._moment_candidate_scores(x_work)
-        if score_name in {"sieve", "sieve_cv", "mi-sieve", "series_cv"}:
+        if score_name == "sieve_cv":
             return self._sieve_candidate_scores(x_work)
-        if score_name in {"kernel", "kernel_cv", "mi-kernel", "local_linear"}:
+        if score_name == "kernel_cv":
             return self._kernel_candidate_scores(x_work)
-        if score_name in {"pwling", "directlingam", "direct_lingam"}:
+        if score_name == "pwling":
             return self._pwling_candidate_scores(x_work)
-        raise ValueError(f"Unknown DirectLiMIAM score: {self.score}")
+        raise ValueError(f"Unknown score: {self.score}. Choose 'moment', 'sieve_cv', 'kernel_cv', or 'pwling'.")
 
     def _standardized_residuals_for_candidate(self, x_work: Array, candidate: int) -> tuple[Array, list[Array]]:
         x_candidate = standardize_vector(x_work[:, candidate])
@@ -565,7 +553,7 @@ __all__ = [
     "DirectLiMIAM",
     "FitResult",
     "center_columns",
-    "estimate_adjacency_full_ols_given_order",
+    "estimate_adjacency_ols_given_order",
     "estimate_adjacency_given_order",
     "fit_order_and_adjacency",
     "make_folds",

@@ -12,7 +12,7 @@ from PIL import Image
 
 from direct_limiam import (
     DirectLiMIAM,
-    estimate_adjacency_full_ols_given_order,
+    estimate_adjacency_ols_given_order,
     estimate_adjacency_given_order,
 )
 
@@ -98,10 +98,9 @@ def add_lingam_dot_panel(
     variable_names: list[str],
     edge_tol: float,
 ) -> None:
-    """Add one DAG panel using the LiNGAM ``make_dot`` convention.
+    """Add one DAG panel.
 
-    This mirrors the repository's ``utils.make_dot`` orientation:
-    ``B[target, source]`` is drawn as ``source -> target`` with the edge
+    Draws B[target, source] as source -> target with the edge
     coefficient as the label.
     """
 
@@ -176,11 +175,11 @@ def estimate_fixed_order_adjacency(
     u: np.ndarray, order: list[int], adjacency_estimator: str
 ) -> np.ndarray:
     estimator = str(adjacency_estimator).lower()
-    if estimator in {"full_ols", "ols", "replication_ols"}:
-        return estimate_adjacency_full_ols_given_order(u, order)
-    if estimator in {"adaptive_lasso", "lasso", "lingam"}:
+    if estimator == "ols":
+        return estimate_adjacency_ols_given_order(u, order)
+    if estimator == "adaptive_lasso":
         return estimate_adjacency_given_order(u, order)
-    raise ValueError(f"Unknown adjacency_estimator: {adjacency_estimator}")
+    raise ValueError(f"Unknown adjacency_estimator: {adjacency_estimator}. Choose 'ols' or 'adaptive_lasso'.")
 
 
 def bootstrap_fixed_order_se(
@@ -470,11 +469,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=123)
     parser.add_argument(
         "--adjacency-estimator",
-        choices=["adaptive_lasso", "full_ols"],
-        default="full_ols",
+        choices=["adaptive_lasso", "ols"],
+        default="ols",
         help=(
-            "Estimate B using full OLS on all predecessors in the learned "
-            "order, or the LiNGAM adaptive LASSO + OLS refit."
+            "Estimate B using OLS on all predecessors in the learned order, "
+            "or the adaptive-Lasso parent-selection plus OLS-refit approach."
         ),
     )
     parser.add_argument("--edge-tol-direct", type=float, default=0.001)
