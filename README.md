@@ -15,10 +15,14 @@ algorithmic skeleton.
 If you use this code, please cite the paper:
 
 ```bibtex
-@article{LiMIAM,
-  title   = {Causal discovery under mean independence and linearity},
-  author = {Geert Mesters and Alvaro Ribot and Anna Seigal and Piotr Zwiernik},
-  year={2025}
+@misc{limiam,
+      title={Causal discovery under mean independence and linearity}, 
+      author={Geert Mesters and Alvaro Ribot and Anna Seigal and Piotr Zwiernik},
+      year={2026},
+      eprint={2605.04381},
+      archivePrefix={arXiv},
+      primaryClass={stat.ME},
+      url={https://arxiv.org/abs/2605.04381}, 
 }
 ```
 
